@@ -1,0 +1,9 @@
+1) O código será separado em front, back e main, onde esse último ira "unir" os dois outros
+
+2) O pady e padx com 2 valores (ex: pady=(5, 20)), significa 5px de "espaçamento" para cima e 20 para baixo. O mesmo se aplica para o_
+padx (só que nesse caso seria: esquerda e direita)
+
+3) Foi utilizado o frame na interface para ajudar a separar, organizar e posicionar melhor os elementos na janela
+
+4) 
+
