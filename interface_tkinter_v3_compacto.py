@@ -1,8 +1,9 @@
-# Imports
+# Imports das bibliotecas
 import tkinter as tk
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
 import numpy as np
+from processamento import gerar_sinais
 
 # FUNÇÕES ----------------------------------------------------------------------------------------
 
@@ -14,6 +15,39 @@ def atualizar_interface(event=None):
         frame_fc2.grid()
     else:
         frame_fc2.grid_remove()
+#fim atualizar_interface
+
+# Função que "pega" os dados dos campos de entrada, converte para float e armazena isso em suas respectivas variáveis
+def aplicar_filtro():
+    # O try/except serve para pegar os erros que poderam ocorrer e caso ocorram não parar o programa além de mostrar
+    # além de mostrar uma mensagem de erro genérica (a mais detalhada ficaria no terminal)
+    try:
+        # Campos do sinal
+        freq_sinal = float(entry_freq_sinal.get())
+        amplitude_sinal = float(entry_amplit_sinal.get())
+
+        # Campos do ruído
+        freq_ruido = float(entry_freq_ruido.get())
+        amplitude_ruido = float(entry_amplit_ruido.get())
+
+        # Testes/debug dos campos de sinal e ruído
+        # print(f"FS: {freq_sinal}; AS: {amplitude_sinal}; FR: {freq_ruido}; AR: {amplitude_ruido}")
+
+        # O retorno da função gerar_sinal será armazenado nas seguintes variáveis (tempo, sinal, ruido, sinal_com_ruido)
+        # Essa ordem é baseada na ordem do return de gerar_sinais
+        tempo, sinal, ruido, sinal_com_ruido = gerar_sinais(freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido)
+
+        # Testes/debug dos retornos da função gerar_sinais
+        # print("Tempo:", tempo[:5])
+        # print("Sinal:", sinal[:5])
+        # print("Ruído:", ruido[:5])
+        # print("Sinal + ruído:", sinal_com_ruido[:5])
+
+    except ValueError as erro:
+        print(erro)
+        messagebox.showerror("ERRO", "Por favor, digite valores válidos")
+#fim aplicar_filtro
+
 
 # 1) JANELA PRINCIPAL ----------------------------------------------------------------------------------------
 
@@ -180,7 +214,7 @@ frame_botoes = tk.Frame(janela)
 frame_botoes.grid(row=3, column=0, pady=15)
 
 # Primeiro botão: aplicar filtro
-botao_aplicar = ttk.Button(frame_botoes, text="APLICAR FILTRO")
+botao_aplicar = ttk.Button(frame_botoes, text="APLICAR FILTRO", command=aplicar_filtro)
 botao_aplicar.grid(row=0, column=0, padx=10)
 
 # Segundo botão: limpar tela
