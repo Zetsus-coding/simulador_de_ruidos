@@ -3,6 +3,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 from processamento import gerar_sinais
 
 # FUNÇÕES ----------------------------------------------------------------------------------------
@@ -43,6 +46,28 @@ def aplicar_filtro():
         # print("Ruído:", ruido[:5])
         # print("Sinal + ruído:", sinal_com_ruido[:5])
 
+        # Limpa os gráficos antes de plotar os novos dados
+        grafico_sinal.clear()
+        grafico_ruidoso.clear()
+
+        # Gráfico do sinal
+        grafico_sinal.plot(tempo, sinal, color="blue", label="Sinal desejado")  # Plota o gráfico do sinal
+        grafico_sinal.set_title("Sinal desejado")  # Adiciona o título do gráfico do sinal
+        grafico_sinal.set_xlabel("Tempo (s)")  # Adiciona o label do eixo x do gráfico do sinal
+        grafico_sinal.set_ylabel("Amplitude V(t)")  # Adiciona o label do eixo y do gráfico do sinal
+        grafico_sinal.grid(True)  # Adiciona a grade do gráfico do sinal
+        grafico_sinal.legend()  # Adiciona a legenda do gráfico do sinal
+
+        # # Gráfico do sinal + ruído
+        grafico_ruidoso.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído")  # Plota o gráfico do sinal + ruído
+        grafico_ruidoso.set_title("Sinal + ruído")  # Adiciona o título do gráfico do sinal + ruído
+        grafico_ruidoso.set_xlabel("Tempo (s)")  # Adiciona o label do eixo x do gráfico do sinal + ruído
+        grafico_ruidoso.set_ylabel("Amplitude V(t)")  # Adiciona o label do eixo y do gráfico do sinal + ruído
+        grafico_ruidoso.grid(True)  # Adiciona a grade do gráfico do sinal + ruído
+        grafico_ruidoso.legend()  # Adiciona a legenda do gráfico do sinal + ruído
+
+        canvas.draw()  # Atualiza o canvas (onde a figura é desenhada) com os novos gráficos
+
     except ValueError as erro:
         print(erro)
         messagebox.showerror("ERRO", "Por favor, digite valores válidos")
@@ -54,7 +79,7 @@ def aplicar_filtro():
 # Criação da janela principal (onde serão colocados os outros componentes como: labels, entries, frames etc.)
 janela = tk.Tk()
 janela.title("Simulador de ruídos eletrônicos")
-janela.geometry("720x720")
+janela.geometry("1000x800")
 janela.option_add("*Font", "Arial 10")
 janela.columnconfigure(0, weight=1)
 
@@ -75,11 +100,12 @@ label_titulo.grid(row=0, column=0, padx=5, pady=5)
 
 # 3) PARÂMETROS ----------------------------------------------------------------------------------------
 
-# Frame principal para o posicionamento dos parâmetros de sinal e ruído
+# Frame principal para o posicionamento dos parâmetros de sinal, ruído e filtro
 frame_parametros = tk.Frame(janela, borderwidth=0.5, relief="solid")
 frame_parametros.grid(row=1, column=0, sticky="ew", padx=10, pady=10)
-frame_parametros.columnconfigure(0, weight=1)
-frame_parametros.columnconfigure(2, weight=1)
+frame_parametros.columnconfigure(0, weight=1, uniform="parametros")
+frame_parametros.columnconfigure(2, weight=1, uniform="parametros")
+frame_parametros.columnconfigure(4, weight=1, uniform="parametros")
 
 # 3.1) Parâmetros do sinal
 
@@ -145,24 +171,27 @@ entry_amplit_ruido = tk.Entry(frame_ruido, width=15)
 entry_amplit_ruido.insert(0, "0")
 entry_amplit_ruido.grid(row=2, column=1, padx=5, pady=(5, 20), sticky="w")
 
+# 3.4) Separador (linha vertical entre os frames de ruido e filtro)
+separador_filtro = ttk.Separator(frame_parametros, orient="vertical")
+separador_filtro.grid(row=0, column=3, sticky="ns", padx=10, pady=10)
+
 # 4) FILTRO ----------------------------------------------------------------------------------------
 
 # Frame para o posicionamento dos elementos relacionados ao filtro (tipo de filtro, frequência de 1 e 2 [fc1 e fc2])
-frame_filtros = tk.Frame(janela, borderwidth=0.5, relief="solid")
-frame_filtros.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
+frame_filtros = tk.Frame(frame_parametros)
+frame_filtros.grid(row=0, column=4, sticky="nsew", padx=10, pady=10)
 
-# Divisão do espaço do frame em 3 partes iguais (todas tem o mesmo peso)
+# Divisão do espaço do frame em 2 partes iguais (todas tem o mesmo peso)
 frame_filtros.columnconfigure(0, weight=1)
 frame_filtros.columnconfigure(1, weight=1)
-frame_filtros.columnconfigure(2, weight=1)
 
 # Label para os parâmetros do filtro 
 label_filtros = tk.Label(frame_filtros, text="PARÂMETROS DO FILTRO")
-label_filtros.grid(row=0, column=0, columnspan=3, pady=12)
+label_filtros.grid(row=0, column=0, columnspan=2, pady=12)
 
 # Combobox
 frame_tipo_filtro = tk.Frame(frame_filtros)
-frame_tipo_filtro.grid(row=1, column=0, pady=(5, 20))
+frame_tipo_filtro.grid(row=1, column=0, columnspan=2, pady=5)
 
 # Label para a combobox
 label_tipo_filtro = tk.Label(frame_tipo_filtro, text="Tipo: ")
@@ -182,7 +211,7 @@ combo_filtro.bind("<<ComboboxSelected>>", atualizar_interface)
 # Frequência de corte 1 (fc1)
 # Frame
 frame_fc1 = tk.Frame(frame_filtros)
-frame_fc1.grid(row=1, column=1, pady=(5, 20))
+frame_fc1.grid(row=2, column=0, pady=(5, 20))
 
 # Label
 label_fc1 = tk.Label(frame_fc1, text="fc1 (Hz): ")
@@ -196,7 +225,7 @@ entry_fc1.grid(row=0, column=1, stick="ew")
 # Frequência de corte 2 (fc2)
 # Frame
 frame_fc2 = tk.Frame(frame_filtros)
-frame_fc2.grid(row=1, column=2, pady=(5, 20))
+frame_fc2.grid(row=2, column=1, pady=(5, 20))
 
 # Label
 label_fc2 = tk.Label(frame_fc2, text="fc2 (Hz): ")
@@ -207,11 +236,11 @@ entry_fc2 = tk.Entry(frame_fc2, width=10)
 entry_fc2.insert(0, "0")
 entry_fc2.grid(row=0, column=1, stick="ew")
 
-# BOTÕES ----------------------------------------------------------------------------------------
+# 5) BOTÕES ----------------------------------------------------------------------------------------
 
 # Frame para o posicionamento dos botões
 frame_botoes = tk.Frame(janela)
-frame_botoes.grid(row=3, column=0, pady=15)
+frame_botoes.grid(row=2, column=0, pady=15)
 
 # Primeiro botão: aplicar filtro
 botao_aplicar = ttk.Button(frame_botoes, text="APLICAR FILTRO", command=aplicar_filtro)
@@ -220,6 +249,33 @@ botao_aplicar.grid(row=0, column=0, padx=10)
 # Segundo botão: limpar tela
 botao_limpar = ttk.Button(frame_botoes, text="LIMPAR")
 botao_limpar.grid(row=0, column=1, padx=10)
+
+# 6) GRÁFICOS (figure e canvas) -----------------------------------------------------------------------------------------------------
+
+# Frame para o posicionamento da seção dos gráficos
+frame_graficos = tk.Frame(janela, borderwidth=0.5, relief="solid")
+frame_graficos.grid(row=3, column=0, sticky="nsew", padx=15, pady=10)
+
+janela.rowconfigure(3, weight=1) # Fazendo com que o espaço restante dessa linha (row) [da janela] seja ocupado/utilizado
+
+frame_graficos.columnconfigure(0, weight=1) # Fazendo com que o espaço restante da coluna (column) [do frame_graficos] seja ocupado/utilizado
+frame_graficos.rowconfigure(0, weight=1) # Fazendo com que o espaço restante da linha (row) [do frame_graficos] seja ocupado/utilizado
+
+# Criação da figura e dos subplots (gráficos do sinal e ruído) do Matplotlib
+figura = Figure(figsize=(10, 5), dpi=100)
+grafico_sinal = figura.add_subplot(1, 2, 1)
+grafico_ruidoso = figura.add_subplot(1, 2, 2)
+figura.tight_layout(pad=3.0) # Ajustando o layout da figura (para que os subplots não fiquem "colados" um no outro)
+
+# Títulos dos gráficos/subplots
+grafico_sinal.set_title("Sinal desejado")
+grafico_ruidoso.set_title("Sinal + ruído")
+
+# Criação do canvas (onde a figura será desenhada) e adição do canvas ao frame_graficos
+canvas = FigureCanvasTkAgg(figura, master=frame_graficos)
+canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew") # Transformando em um widget e definindo a posição do canvas (no frame_graficos)
+
+canvas.draw() # Desenhando a figura no canvas
 
 # INICIALIZAÇÃO ----------------------------------------------------------------------------------------
 
