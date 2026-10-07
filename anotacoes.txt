@@ -8,3 +8,4 @@ padx (só que nesse caso seria: esquerda e direita)
 4) Outro método para criar a lista com os ponto de tempo -> tempo = np.linspace(0, duracao, fs*duracao, endpoint=False)
     --> Onde o 'endpoint=False' faz com que não sejam considerados os pontos 0 e 2
 
+5) Pasta outros, ficou para versões anteriores (normalmente por causa de grandes reestruturações) além de projetos/ideias futuras

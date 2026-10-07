@@ -1,3 +1,6 @@
+# Ideia extra (não implementada): além de criar os gráficos em uma nova janela, permitir interagir com eles (zoom, pan, salvar como imagem etc.) 
+# e também permitir que o usuário escolha quais gráficos ele quer ver (sinal, ruído, comparação e sinal filtrado) e em qual ordem eles serão exibidos.
+
 # Imports das bibliotecas
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -20,33 +23,79 @@ def atualizar_interface(event=None):
         frame_fc2.grid_remove()
 #fim atualizar_interface
 
-# Função que lê os valores dos campos de entrada e armazena em suas respectivas variáveis
-def ler_entrada():
-    # Campos do sinal
-    freq_sinal = float(entry_freq_sinal.get())
-    amplitude_sinal = float(entry_amplit_sinal.get())
-    
-    # Campos do ruído
-    freq_ruido = float(entry_freq_ruido.get())
-    amplitude_ruido = float(entry_amplit_ruido.get())
+# Função que abre uma nova janela para o posicionamento dos gráficos
+def abrir_janela_graficos(tempo, sinal, ruido, sinal_com_ruido):
+    # Criação da janela secundária para os gráficos
+    janela_graficos = tk.Toplevel(janela)
+    janela_graficos.title("Gráficos da simulação")
+    janela_graficos.geometry("1000x700")
 
-    return freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido
-#fim ler_entrada
+    # Criação da figura e dos subplots (gráficos do sinal, ruído, comparação e sinal filtrado) do Matplotlib
+    figura = Figure(figsize=(10, 7), dpi=100)
+    grafico_sinal = figura.add_subplot(2, 2, 1)
+    grafico_ruido = figura.add_subplot(2, 2, 2)
+    grafico_entrada = figura.add_subplot(2, 2, 3)
+    grafico_filtrado = figura.add_subplot(2, 2, 4)
 
-# Essa função chama a função ler_entrada() para pegar os valores dos campos de entrada, chama a função gerar_sinais() para gerar 
-# o sinal e o ruído, e então plota os gráficos do sinal desejado e do sinal com ruído
+    # Gráfico do sinal
+    grafico_sinal.plot(tempo, sinal, color="blue", label="Sinal desejado")
+    grafico_sinal.set_title("Sinal desejado")
+    grafico_sinal.set_xlabel("Tempo (s)")
+    grafico_sinal.set_ylabel("Amplitude V(t)")
+    grafico_sinal.grid(True)
+    grafico_sinal.legend()
+
+    # Gráfico do ruído
+    grafico_ruido.plot(tempo, ruido, color="red", label="Ruído")
+    grafico_ruido.set_title("Ruído")
+    grafico_ruido.set_xlabel("Tempo (s)")
+    grafico_ruido.set_ylabel("Amplitude V(t)")
+    grafico_ruido.grid(True)
+    grafico_ruido.legend()
+
+    # Gráfico do sinal desejado e sinal + ruído
+    grafico_entrada.plot(tempo, sinal, color="blue", label="Sinal desejado")
+    grafico_entrada.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído")
+    grafico_entrada.set_title("Antes da filtragem")
+    grafico_entrada.set_xlabel("Tempo (s)")
+    grafico_entrada.set_ylabel("Amplitude V(t)")
+    grafico_entrada.grid(True)
+    grafico_entrada.legend()
+
+    # Gráfico reservado para o sinal após a filtragem
+    grafico_filtrado.set_title("Após a filtragem")
+    grafico_filtrado.set_xlabel("Tempo (s)")
+    grafico_filtrado.set_ylabel("Amplitude V(t)")
+    grafico_filtrado.grid(True)
+
+    figura.tight_layout(pad=3.0) # Ajustando o layout da figura (para que os subplots não fiquem "colados" um no outro)
+
+    # Criação do canvas (onde a figura será desenhada) e adição do canvas à janela dos gráficos
+    canvas = FigureCanvasTkAgg(figura, master=janela_graficos)
+    canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    canvas.draw() # Desenhando a figura no canvas
+#fim abrir_janela_graficos
+
+# Função que "pega" os dados dos campos de entrada, converte para float e armazena isso em suas respectivas variáveis
 def aplicar_filtro():
     # O try/except serve para pegar os erros que poderam ocorrer e caso ocorram não parar o programa além de mostrar
     # além de mostrar uma mensagem de erro genérica (a mais detalhada ficaria no terminal)
     try:
+        # Campos do sinal
+        freq_sinal = float(entry_freq_sinal.get())
+        amplitude_sinal = float(entry_amplit_sinal.get())
 
-        freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido = ler_entrada()
+        # Campos do ruído
+        freq_ruido = float(entry_freq_ruido.get())
+        amplitude_ruido = float(entry_amplit_ruido.get())
+
         # Testes/debug dos campos de sinal e ruído
         # print(f"FS: {freq_sinal}; AS: {amplitude_sinal}; FR: {freq_ruido}; AR: {amplitude_ruido}")
 
         # O retorno da função gerar_sinal será armazenado nas seguintes variáveis (tempo, sinal, ruido, sinal_com_ruido)
         # Essa ordem é baseada na ordem do return de gerar_sinais
-        tempo, sinal, ruido, sinal_com_ruido = gerar_sinais()
+        tempo, sinal, ruido, sinal_com_ruido = gerar_sinais(freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido)
 
         # Testes/debug dos retornos da função gerar_sinais
         # print("Tempo:", tempo[:5])
@@ -54,25 +103,8 @@ def aplicar_filtro():
         # print("Ruído:", ruido[:5])
         # print("Sinal + ruído:", sinal_com_ruido[:5])
 
-        # Limpa os gráficos antes de plotar os novos dados
-        grafico_inicial.clear()
-        grafico_final.clear()
-
-        # Gráfico do sinal desejado + sinal com ruído
-        grafico_inicial.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído", alpha=0.6)
-        grafico_inicial.plot(tempo, sinal, color="blue", label="Sinal desejado", alpha=0.5)
-
-        grafico_inicial.set_title("Sinal desejado & Sinal + ruído")
-        grafico_inicial.set_xlabel("Tempo (s)")
-        grafico_inicial.set_ylabel("Amplitude V(t)")
-        grafico_inicial.legend()
-        grafico_inicial.grid(True)
-
-        # Gráfico do sinal desejado & sinal filtrado
-        grafico_final.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído")
-        grafico_final.plot(tempo, sinal, color="black", label="Sinal + ruído")
-
-        canvas.draw()  # Atualiza o canvas (onde a figura é desenhada) com os novos gráficos
+        # Abre a janela separada para exibir os gráficos gerados
+        abrir_janela_graficos(tempo, sinal, ruido, sinal_com_ruido)
 
     except ValueError as erro:
         print(erro)
@@ -85,7 +117,7 @@ def aplicar_filtro():
 # Criação da janela principal (onde serão colocados os outros componentes como: labels, entries, frames etc.)
 janela = tk.Tk()
 janela.title("Simulador de ruídos eletrônicos")
-janela.geometry("1000x800")
+janela.geometry("720x300")
 janela.option_add("*Font", "Arial 10")
 janela.columnconfigure(0, weight=1)
 
@@ -255,33 +287,6 @@ botao_aplicar.grid(row=0, column=0, padx=10)
 # Segundo botão: limpar tela
 botao_limpar = ttk.Button(frame_botoes, text="LIMPAR")
 botao_limpar.grid(row=0, column=1, padx=10)
-
-# 6) GRÁFICOS (figure e canvas) -----------------------------------------------------------------------------------------------------
-
-# Frame para o posicionamento da seção dos gráficos
-frame_graficos = tk.Frame(janela, borderwidth=0.5, relief="solid")
-frame_graficos.grid(row=3, column=0, sticky="nsew", padx=15, pady=10)
-
-janela.rowconfigure(3, weight=1) # Fazendo com que o espaço restante dessa linha (row) [da janela] seja ocupado/utilizado
-
-frame_graficos.columnconfigure(0, weight=1) # Fazendo com que o espaço restante da coluna (column) [do frame_graficos] seja ocupado/utilizado
-frame_graficos.rowconfigure(0, weight=1) # Fazendo com que o espaço restante da linha (row) [do frame_graficos] seja ocupado/utilizado
-
-# Criação da figura e dos subplots (gráficos do sinal e ruído) do Matplotlib
-figura = Figure(figsize=(10, 5), dpi=100)
-grafico_inicial = figura.add_subplot(1, 2, 1)
-grafico_final = figura.add_subplot(1, 2, 2)
-figura.tight_layout(pad=3.0) # Ajustando o layout da figura (para que os subplots não fiquem "colados" um no outro)
-
-# Títulos dos gráficos/subplots
-grafico_inicial.set_title("Sinal desejado")
-grafico_final.set_title("Sinal + ruído")
-
-# Criação do canvas (onde a figura será desenhada) e adição do canvas ao frame_graficos
-canvas = FigureCanvasTkAgg(figura, master=frame_graficos)
-canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew") # Transformando em um widget e definindo a posição do canvas (no frame_graficos)
-
-canvas.draw() # Desenhando a figura no canvas
 
 # INICIALIZAÇÃO ----------------------------------------------------------------------------------------
 
