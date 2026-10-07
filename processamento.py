@@ -23,8 +23,7 @@ def gerar_sinais(freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido, fs=10
     return tempo, sinal, ruido, sinal_com_ruido
 #fim gerar_sinais
 
-
-# TESTES ----------------------------------------------------------------------------------------------------------------
+# TESTES/DEBUG ----------------------------------------------------------------------------------------------------------------
 # if __name__ == "__main__":
 #     tempo, sinal, ruido, sinal_com_ruido = gerar_sinais(
 #         5,
@@ -37,3 +36,8 @@ def gerar_sinais(freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido, fs=10
 #     print("Sinal:", sinal[:5])
 #     print("Ruído:", ruido[:5])
 #     print("Sinal + ruído:", sinal_com_ruido[:5])
+
+def filtro_passa_baixa(sinal_entrada, fc, fs=1000, duracao=2):
+    dt = 1 / fs
+    rc = 1 / (2 * np.pi * fc)
+    

@@ -20,7 +20,7 @@ def atualizar_interface(event=None):
         frame_fc2.grid_remove()
 #fim atualizar_interface
 
-# Função que lê os valores dos campos de entrada e armazena em suas respectivas variáveis
+# Função que lê ("pega") os valores dos campos de entrada e armazena em suas respectivas variáveis
 def ler_entrada():
     # Campos do sinal
     freq_sinal = float(entry_freq_sinal.get())
@@ -30,8 +30,40 @@ def ler_entrada():
     freq_ruido = float(entry_freq_ruido.get())
     amplitude_ruido = float(entry_amplit_ruido.get())
 
-    return freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido
+    # Campos do filtro
+    tipo_filtro = combo_filtro.get()
+    fc1 = float(entry_fc1.get())
+
+    fc2 = None # Inicializa a variável fc2 como None, caso não seja necessário ler o valor do campo fc2 (passa-baixa ou passa-alta)
+    # Se o tipo de filtro for passa-faixa ou rejeita-faixa, então o campo fc2 terá seu valor lido e armazenado
+    if tipo_filtro in ["Passa-faixa", "Rejeita-faixa"]: 
+        fc2 = float(entry_fc2.get())
+
+    return freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido, tipo_filtro, fc1, fc2
 #fim ler_entrada
+
+# Função que atualiza os gráficos com os novos dados (sinal desejado, ruído, sinal com ruído etc.)
+def atualizar_grafico(tempo, sinal, ruido, sinal_com_ruido):
+    # Limpa os gráficos antes de plotar os novos dados
+    grafico_inicial.clear()
+    grafico_final.clear()
+
+    # Gráfico do sinal desejado + sinal com ruído
+    grafico_inicial.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído", alpha=0.6)
+    grafico_inicial.plot(tempo, sinal, color="black", label="Sinal desejado", alpha=0.8)
+
+    grafico_inicial.set_title("Sinal desejado & Sinal + ruído")
+    grafico_inicial.set_xlabel("Tempo (s)")
+    grafico_inicial.set_ylabel("Amplitude V(t)")
+    grafico_inicial.legend()
+    grafico_inicial.grid(True)
+
+    # Gráfico do sinal desejado & sinal filtrado
+    grafico_final.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído")
+    grafico_final.plot(tempo, sinal, color="black", label="Sinal + ruído")
+
+    canvas.draw()  # Atualiza o canvas (onde a figura é desenhada) com os novos gráficos
+#fim atualizar_grafico
 
 # Essa função chama a função ler_entrada() para pegar os valores dos campos de entrada, chama a função gerar_sinais() para gerar 
 # o sinal e o ruído, e então plota os gráficos do sinal desejado e do sinal com ruído
@@ -40,45 +72,29 @@ def aplicar_filtro():
     # além de mostrar uma mensagem de erro genérica (a mais detalhada ficaria no terminal)
     try:
 
-        freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido = ler_entrada()
+        # Pegando os valores dos campos de entrada e armazenando em suas respectivas variáveis (através da função ler_entrada())
+        freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido, tipo_filtro, fc1, fc2 = ler_entrada()
+        
         # Testes/debug dos campos de sinal e ruído
         # print(f"FS: {freq_sinal}; AS: {amplitude_sinal}; FR: {freq_ruido}; AR: {amplitude_ruido}")
 
         # O retorno da função gerar_sinal será armazenado nas seguintes variáveis (tempo, sinal, ruido, sinal_com_ruido)
         # Essa ordem é baseada na ordem do return de gerar_sinais
-        tempo, sinal, ruido, sinal_com_ruido = gerar_sinais()
+        tempo, sinal, ruido, sinal_com_ruido = gerar_sinais(freq_sinal, amplitude_sinal, freq_ruido, amplitude_ruido)
 
-        # Testes/debug dos retornos da função gerar_sinais
+        # Testes/debug dos retornos da função gerar_sinais (limita cada um aos primeiros 5 valores, para não poluir o terminal)
         # print("Tempo:", tempo[:5])
         # print("Sinal:", sinal[:5])
         # print("Ruído:", ruido[:5])
         # print("Sinal + ruído:", sinal_com_ruido[:5])
 
-        # Limpa os gráficos antes de plotar os novos dados
-        grafico_inicial.clear()
-        grafico_final.clear()
-
-        # Gráfico do sinal desejado + sinal com ruído
-        grafico_inicial.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído", alpha=0.6)
-        grafico_inicial.plot(tempo, sinal, color="blue", label="Sinal desejado", alpha=0.5)
-
-        grafico_inicial.set_title("Sinal desejado & Sinal + ruído")
-        grafico_inicial.set_xlabel("Tempo (s)")
-        grafico_inicial.set_ylabel("Amplitude V(t)")
-        grafico_inicial.legend()
-        grafico_inicial.grid(True)
-
-        # Gráfico do sinal desejado & sinal filtrado
-        grafico_final.plot(tempo, sinal_com_ruido, color="red", label="Sinal + ruído")
-        grafico_final.plot(tempo, sinal, color="black", label="Sinal + ruído")
-
-        canvas.draw()  # Atualiza o canvas (onde a figura é desenhada) com os novos gráficos
+        # Chamando a função para atualizar os gráficos
+        atualizar_grafico(tempo, sinal, ruido, sinal_com_ruido)
 
     except ValueError as erro:
         print(erro)
         messagebox.showerror("ERRO", "Por favor, digite valores válidos")
 #fim aplicar_filtro
-
 
 # 1) JANELA PRINCIPAL ----------------------------------------------------------------------------------------
 
