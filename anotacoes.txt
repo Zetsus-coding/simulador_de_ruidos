@@ -9,3 +9,32 @@ padx (só que nesse caso seria: esquerda e direita)
     --> Onde o 'endpoint=False' faz com que não sejam considerados os pontos 0 e 2
 
 5) Pasta outros, ficou para versões anteriores (normalmente por causa de grandes reestruturações) além de projetos/ideias futuras
+
+6) Exemplo do expectro da frequência (S:5Hz e R:50Hz) e como funciona
+
+    índice    frequencias       espectro X(f)
+    ------------------------------------------------
+    0           0 Hz            ~ 0 + 0j
+    1         0,5 Hz            ~ 0 + 0j
+    2           1 Hz            ~ 0 + 0j
+    3         1,5 Hz            ~ 0 + 0j
+    ...
+    10          5 Hz              0 - 1000j
+    ...
+    100        50 Hz              0 - 400j
+    ------------------------------------------------
+   
+    0 + 0j,       # componente de 0,5 Hz
+    0 + 0j,       # componente de 1 Hz
+    ...
+    0 - 1000j,    # componente de 5 Hz
+    ...
+    0 - 400j,     # componente de 50 Hz
+    ...
+    ...
+    ------------------------------------------------
+    
+    frequência      X(f)                 H(f)
+    ---------------------------------------------------------
+    5 Hz          0 - 1000j       0,8 - 0,4j
+    50 Hz         0 - 400j        0,0385 - 0,1923j
